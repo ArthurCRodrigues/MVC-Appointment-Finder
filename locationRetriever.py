@@ -72,5 +72,11 @@ class Filter:
         for obj in self.retriever.locations:
             if range_date >= obj.next_appointment_date >= current_date:
                 filtered_dates.append(obj)
-        return filtered_dates
+        return self.__sort_locations(filtered_dates)
 
+
+    def __sort_locations(self,locations):
+        """
+        Sorts a list of Location objects by their next_appointment_date in ascending order.
+        """
+        return sorted(locations, key=lambda loc: loc.next_appointment_date)
