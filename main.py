@@ -1,6 +1,7 @@
-import idRetriever,dateFetcher
+from locationRetriever import Filter
 from datetime import datetime
 if __name__ == "__main__":
-    ids = idRetriever.getIds("https://telegov.njportal.com/njmvc/AppointmentWizard/12")
-    for id in ids:
-        dateFetcher.getDate(f"https://telegov.njportal.com/njmvc/AppointmentWizard/12/{id}")
+    ans = int(input("Select a day range for your appointment: "))
+    locs = Filter(ans)
+    for x in locs.filter():
+        print(x,"\n")
