@@ -9,40 +9,55 @@ class LocationRetriever:
         self.locations = self.__getLocations()
 
     def __getTags(self):
-        req = requests.get('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
-        soup = BeautifulSoup(req.text, 'html.parser')
-        # Find all script tags
-        script_tags = soup.find_all('script')
-        return script_tags
+        try:
+            req = requests.get('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
+            soup = BeautifulSoup(req.text, 'html.parser')
+            # Find all script tags
+            script_tags = soup.find_all('script')
+            return script_tags
+        except requests.exceptions.RequestException as e:
+            print("Error: ",e)
+            return []
 
     def __findData(self):
-        locationData = ""
-        timeData = ""
-        script_tags = self.__getTags()
-        # Regular expressions to extract locationData and timeData
-        location_pattern = r'var locationData\s*=\s*(\[\{.*?\}\]);'
-        time_pattern = r'var timeData = (\[.*?\])'
-        # Print the script tags
-        for script_tag in script_tags:
-            # Extract locationData
-            location_match = re.search(location_pattern, str(script_tag), re.DOTALL)
-            locationData = location_match.group(1) if location_match else None
+        try:
+            script_tags = self.__getTags()
+            if script_tags == []:
+                return None,None
+            # Regular expressions to extract locationData and timeData
+            location_pattern = r'var locationData\s*=\s*(\[\{.*?\}\]);'
+            time_pattern = r'var timeData = (\[.*?\])'
+            # Print the script tags
+            for script_tag in script_tags:
+                # Extract locationData
+                location_match = re.search(location_pattern, str(script_tag), re.DOTALL)
+                locationData = location_match.group(1) if location_match else None
 
-            # Extract timeData
-            time_match = re.search(time_pattern, str(script_tag), re.DOTALL)
-            timeData = time_match.group(1) if time_match else None
-            if locationData and timeData:
-                return locationData,timeData
+                # Extract timeData
+                time_match = re.search(time_pattern, str(script_tag), re.DOTALL)
+                timeData = time_match.group(1) if time_match else None
+                if locationData and timeData:
+                    return locationData,timeData
+            raise ValueError("Couldn't find data.")
+        except (re.error, ValueError) as e:
+            print("Error: ",e)
+            return None,None
 
     def __parseData(self):
-        locationData,timeData = self.__findData()
-        location_json = json.loads(locationData)
-        time_json = json.loads(timeData)
-        time_dict = {}
-        for obj in time_json:
-            time_dict[obj["LocationId"]] = obj  # Fills a new dictionary with the location id as a key for that dict (linear access)
-        # Basically hashed the dict
-        return location_json,time_dict
+        try:
+            locationData,timeData = self.__findData()
+            if not locationData or not timeData:
+                raise ValueError("Couldn't find data.")
+            location_json = json.loads(locationData)
+            time_json = json.loads(timeData)
+            time_dict = {}
+            for obj in time_json:
+                time_dict[obj["LocationId"]] = obj  # Fills a new dictionary with the location id as a key for that dict (linear access)
+            # Basically hashed the dict
+            return location_json,time_dict
+        except json.decoder.JSONDecodeError as e:
+            print("Error: ",e)
+            return None,None
 
     def __getLocations(self):
         location_json,time_dict = self.__parseData()

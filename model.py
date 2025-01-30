@@ -1,4 +1,5 @@
 '''
+
 This is the model that keeps all the location info as objects
 It will store:
  - Name
