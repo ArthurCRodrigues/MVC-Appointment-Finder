@@ -9,11 +9,17 @@ class LocationRetriever:
         self.locations = self.__getLocations()
 
     def __getTags(self):
+        """
+        Creates the soup from the appointmentWizard website using requests library and filter all the script tags in the document.
+        :return:
+            bs4 resultSet with all script tags found
+        """
         try:
             req = requests.get('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
             soup = BeautifulSoup(req.text, 'html.parser')
             # Find all script tags
             script_tags = soup.find_all('script')
+
             return script_tags
         except requests.exceptions.RequestException as e:
             print("Error: ",e)
