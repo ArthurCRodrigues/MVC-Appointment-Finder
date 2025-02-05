@@ -46,8 +46,8 @@ class LocationRetriever:
                 location_match = re.search(location_pattern, str(script_tag), re.DOTALL)
                 locationData = location_match.group(1) if location_match else None
                 if locationData:
-
                     return locationData
+
             raise ValueError("Couldn't find data.")
         except (re.error, ValueError) as e:
             print("Error: ",e)
@@ -78,7 +78,7 @@ class LocationRetriever:
 
     def __parseData(self):
         """
-        gets both strings from __findLocation and __findTime and uses json library to map them into python dicts. Hashes time_json dict to make it's access linear in the future
+        gets both strings from __findLocation and __findTime and uses json library to map them into python dicts. Hashes time_json dict to make its access linear in the future
         :return:
         """
         try:
@@ -106,19 +106,34 @@ class LocationRetriever:
         location_json,time_dict = self.__parseData()
         if not location_json or not time_dict:
             raise ValueError("Couldn't find data.")
+
         locations = []
+
         for obj in location_json:
             dict = time_dict.get(obj["LocAppointments"][0]["LocationId"]) #obj["LocAppointments"][0]["LocationId"] is the way to access each iterable's (location) id
             if not dict:
                 raise KeyError("ID doesn't exist in time_dict")
+
             if dict["FirstOpenSlot"] == "No Appointments Available":
                 continue #quits the loop if there are no appointments available for the location
-            ap_str = dict["FirstOpenSlot"]
-            appointments = int(ap_str.split(" ")[0])  # number of appointments
-            ap_str = ap_str.split("Next Available: ")
-            date_obj = datetime.strptime(ap_str[1], "%m/%d/%Y %I:%M %p")  # next free appointment (parse into datetime obj)
+
+            appointment_str = dict["FirstOpenSlot"]
+            try:
+                appointments = int(appointment_str.split(" ")[0]) # number of appointments
+            except ValueError:
+                print(f"Warning: Could not parse appointment count in {appointment_str}")
+                continue
+
+            try:
+                appointment_str = appointment_str.split("Next Available: ")
+                date_obj = datetime.strptime(appointment_str[1], "%m/%d/%Y %I:%M %p")  # next free appointment (parse into datetime obj)
+            except (IndexError,ValueError) as e:
+                print(f"Error:{e},skipping...")
+                continue
+
             location_obj = Location(obj, appointments, date_obj) #pass to Location model
             locations.append(location_obj)
+
         return locations
 
 class Filter:
