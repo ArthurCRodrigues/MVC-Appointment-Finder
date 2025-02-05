@@ -1,20 +1,16 @@
-'''
 
-This is the model that keeps all the location info as objects
-It will store:
- - Name
- - Street 1
- - City
- - State
- - Zip code
- - Phone Number
- - Appointments available
- - Next Appointment Date
-
-'''
 from datetime import datetime
 class Location:
     def __init__(self,loc_dict,appointments,next_appointment_date):
+        """
+        Location Model that creates a location object with the basic info (Name,adress,zipcode,phone,number of appointments and next appointment date)
+        :param loc_dict:
+            Python dictionary that contains 'Name','Street1','City','State','Zip','PhoneNumber' fields with related info
+        :param appointments:
+            Integer (represents number of appointments available)
+        :param next_appointment_date:
+            Datetime object representing the next appointment date
+        """
         self.name = loc_dict['Name']
         self.street = loc_dict['Street1']
         self.city = loc_dict['City']
