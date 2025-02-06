@@ -15,19 +15,20 @@ class LocationRetriever:
         """
         Handles all functions providing the necessary parameters (following the chain logic from the methods) and assign the final value to locations attribute.
         """
-        script_tags = self.__get_tags('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
-        location_data_str = self.__find_location(script_tags)
-        time_data_str = self.__find_time(location_data_str)
+        script_tags = self.get_tags('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
+        print(script_tags)
+        location_data_str = self.find_location(script_tags)
+        time_data_str = self.find_time(script_tags)
 
-        location_json,time_dict = self.__parse_data(location_data_str, time_data_str)
+        location_json,time_dict = self.parse_data(location_data_str, time_data_str)
 
         if not location_json or not time_dict:
             raise ValueError("Couldn't find data.")
 
-        self.locations = self.__get_locations(location_json,time_dict)
+        self.locations = self.get_locations(location_json,time_dict)
 
 
-    def __get_tags(self,url: str):
+    def get_tags(self,url: str):
         """
         Creates the soup from the appointmentWizard website using requests library and filter all the script tags in the document.
         :return:
@@ -42,9 +43,9 @@ class LocationRetriever:
         soup = BeautifulSoup(req.text, 'html.parser')
         return soup.find_all('script')
 
-    def __find_location(self, script_tags: ResultSet):
+    def find_location(self, script_tags: ResultSet):
         """
-        Iterates through the result set from __getTags and uses regular expressions on the iterables in order to extract the locationData variable value (if existent).
+        Iterates through the result set from getTags and uses regular expressions on the iterables in order to extract the locationData variable value (if existent).
         :return:
             IF FOUND: variable value as string
             IF NOT FOUND: None
@@ -61,11 +62,11 @@ class LocationRetriever:
             if locationData:
                 return locationData
 
-            raise ValueError("Couldn't find data.")
+        raise ValueError("Couldn't find data.")
 
-    def __find_time(self, script_tags: ResultSet):
+    def find_time(self, script_tags: ResultSet):
         """
-                Iterates through the result set from __getTags and uses regular expressions on the iterables in order to extract the timeData variable value (if existent).
+                Iterates through the result set from getTags and uses regular expressions on the iterables in order to extract the timeData variable value (if existent).
                 :return:
                     IF FOUND: variable value as string
                     IF NOT FOUND: None
@@ -81,9 +82,9 @@ class LocationRetriever:
                 return timeData
         raise ValueError("Couldn't find data.")
 
-    def __parse_data(self, locationData: str, timeData: str):
+    def parse_data(self, locationData: str, timeData: str):
         """
-        gets both strings from __findLocation and __findTime and uses json library to map them into python dicts. Hashes time_json dict to make its access linear in the future
+        gets both strings from findLocation and findTime and uses json library to map them into python dicts. Hashes time_json dict to make its access linear in the future
         :return:
         """
         try:
@@ -100,7 +101,7 @@ class LocationRetriever:
             print("Error: ",e)
             return None,None
 
-    def __get_locations(self,location_json: dict,time_dict: dict):
+    def get_locations(self,location_json: dict,time_dict: dict):
         """
         filters those locations which have available appointments and pass them to Location model. Also extract the number of available appointments and parse the next appointment date (string) to a datetime object
         :return:
@@ -147,6 +148,7 @@ class Filter:
         """
         self.days = days
         self.retriever = LocationRetriever()
+        self.retriever.fetch_locations()
 
     def filter(self):
         """
@@ -159,11 +161,21 @@ class Filter:
         for obj in self.retriever.locations:
             if range_date >= obj.next_appointment_date >= current_date:
                 filtered_dates.append(obj)
-        return self.__sort_locations(filtered_dates)
+        return self.sort_locations(filtered_dates)
 
 
-    def __sort_locations(self,locations):
+    def sort_locations(self,locations):
         """
         Sorts a list of Location objects by their next_appointment_date in ascending order.
         """
         return sorted(locations, key=lambda loc: loc.next_appointment_date)
+
+
+if __name__ == "__main__":
+    retriever = LocationRetriever()
+    with open("usableScripts.txt","w") as f:
+        script_tags = retriever.get_tags('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
+        location_str = retriever.find_location(script_tags)
+        time_str = retriever.find_time(script_tags)
+        f.write(location_str + "\n")
+        f.write(time_str + "\n")
