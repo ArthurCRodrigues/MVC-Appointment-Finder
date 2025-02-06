@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, ResultSet
 import requests,re,json
 from datetime import datetime,timedelta
 
@@ -9,83 +9,84 @@ class LocationRetriever:
     This class will only contain one attribute (locations) that will be set automatically upon instantiation. The attribute itself is a list of location objects with available appointments (regardless of date).
     """
     def __init__(self):
-        self.locations = self.__getLocations()
+        self.locations = []
 
-    def __getTags(self):
+    def fetch_locations(self):
+        """
+        Handles all functions providing the necessary parameters (following the chain logic from the methods) and assign the final value to locations attribute.
+        """
+        script_tags = self.__get_tags('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
+        location_data_str = self.__find_location(script_tags)
+        time_data_str = self.__find_time(location_data_str)
+
+        location_json,time_dict = self.__parse_data(location_data_str, time_data_str)
+
+        if not location_json or not time_dict:
+            raise ValueError("Couldn't find data.")
+
+        self.locations = self.__get_locations(location_json,time_dict)
+
+
+    def __get_tags(self,url: str):
         """
         Creates the soup from the appointmentWizard website using requests library and filter all the script tags in the document.
         :return:
             bs4 resultSet with all script tags found
         """
         try:
-            req = requests.get('https://telegov.njportal.com/njmvc/AppointmentWizard/12', timeout=10)
+            req = requests.get(url, timeout=10)
             req.raise_for_status()  # Raises an error for bad responses
         except requests.RequestException as e:
             print(f"Error fetching data: {e}")
             return []
-
         soup = BeautifulSoup(req.text, 'html.parser')
         return soup.find_all('script')
 
-    def __findLocation(self):
+    def __find_location(self, script_tags: ResultSet):
         """
         Iterates through the result set from __getTags and uses regular expressions on the iterables in order to extract the locationData variable value (if existent).
         :return:
             IF FOUND: variable value as string
             IF NOT FOUND: None
         """
-        try:
-            script_tags = self.__getTags()
-            if script_tags == []:
-                return None
-
-            # Regular expressions to extract locationData
-            location_pattern = r'var locationData\s*=\s*(\[\{.*?\}\]);'
-            for script_tag in script_tags:
-                # Extract locationData
-                location_match = re.search(location_pattern, str(script_tag), re.DOTALL)
-                locationData = location_match.group(1) if location_match else None
-                if locationData:
-                    print(type(locationData))
-                    print(locationData)
-                    return locationData
-
-            raise ValueError("Couldn't find data.")
-        except (re.error, ValueError) as e:
-            print("Error: ",e)
+        if script_tags == []:
             return None
 
-    def __findTime(self):
+         # Regular expressions to extract locationData
+        location_pattern = r'var locationData\s*=\s*(\[\{.*?\}\]);'
+        for script_tag in script_tags:
+            # Extract locationData
+            location_match = re.search(location_pattern, str(script_tag), re.DOTALL)
+            locationData = location_match.group(1) if location_match else None
+            if locationData:
+                return locationData
+
+            raise ValueError("Couldn't find data.")
+
+    def __find_time(self, script_tags: ResultSet):
         """
                 Iterates through the result set from __getTags and uses regular expressions on the iterables in order to extract the timeData variable value (if existent).
                 :return:
                     IF FOUND: variable value as string
                     IF NOT FOUND: None
                 """
-        try:
-            script_tags = self.__getTags()
-            if script_tags == []:
-                return None
-            time_pattern = r'var timeData = (\[.*?\])'
-            for script_tag in script_tags:
-                # Extract timeData
-                time_match = re.search(time_pattern, str(script_tag), re.DOTALL)
-                timeData = time_match.group(1) if time_match else None
-                if timeData:
-                    return timeData
-            raise ValueError("Couldn't find data.")
-        except (re.error, ValueError) as e:
-            print("Error: ",e)
-            return None,None
+        if script_tags == []:
+            return None
+        time_pattern = r'var timeData = (\[.*?\])'
+        for script_tag in script_tags:
+            # Extract timeData
+            time_match = re.search(time_pattern, str(script_tag), re.DOTALL)
+            timeData = time_match.group(1) if time_match else None
+            if timeData:
+                return timeData
+        raise ValueError("Couldn't find data.")
 
-    def __parseData(self):
+    def __parse_data(self, locationData: str, timeData: str):
         """
         gets both strings from __findLocation and __findTime and uses json library to map them into python dicts. Hashes time_json dict to make its access linear in the future
         :return:
         """
         try:
-            locationData = self.__findLocation()
-            timeData = self.__findTime()
             if not locationData or not timeData:
                 raise ValueError("Couldn't find data.")
             location_json = json.loads(locationData)
@@ -99,13 +100,12 @@ class LocationRetriever:
             print("Error: ",e)
             return None,None
 
-    def __getLocations(self):
+    def __get_locations(self,location_json: dict,time_dict: dict):
         """
         filters those locations which have available appointments and pass them to Location model. Also extract the number of available appointments and parse the next appointment date (string) to a datetime object
         :return:
             list of Location objects with available appointments
         """
-        location_json,time_dict = self.__parseData()
         if not location_json or not time_dict:
             raise ValueError("Couldn't find data.")
 
