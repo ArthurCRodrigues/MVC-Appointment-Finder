@@ -46,6 +46,8 @@ class LocationRetriever:
                 location_match = re.search(location_pattern, str(script_tag), re.DOTALL)
                 locationData = location_match.group(1) if location_match else None
                 if locationData:
+                    print(type(locationData))
+                    print(locationData)
                     return locationData
 
             raise ValueError("Couldn't find data.")
