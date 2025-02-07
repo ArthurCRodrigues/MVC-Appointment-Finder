@@ -16,7 +16,6 @@ class LocationRetriever:
         Handles all functions providing the necessary parameters (following the chain logic from the methods) and assign the final value to locations attribute.
         """
         script_tags = self.get_tags('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
-        print(script_tags)
         location_data_str = self.find_location(script_tags)
         time_data_str = self.find_time(script_tags)
 
@@ -113,42 +112,46 @@ class LocationRetriever:
         locations = []
 
         for obj in location_json:
-            dict = time_dict.get(obj["LocAppointments"][0]["LocationId"]) #obj["LocAppointments"][0]["LocationId"] is the way to access each iterable's (location) id
+            dict = self.get_dict(obj,time_dict)
             if not dict:
-                raise KeyError("ID doesn't exist in time_dict")
-
+                continue
             if dict["FirstOpenSlot"] == "No Appointments Available":
                 continue #quits the loop if there are no appointments available for the location
 
-            appointment_str = dict["FirstOpenSlot"]
-            try:
-                appointments = int(appointment_str.split(" ")[0]) # number of appointments
-            except ValueError:
-                print(f"Warning: Could not parse appointment count in {appointment_str}")
-                continue
-
-            try:
-                appointment_str = appointment_str.split("Next Available: ")
-                date_obj = datetime.strptime(appointment_str[1], "%m/%d/%Y %I:%M %p")  # next free appointment (parse into datetime obj)
-            except (IndexError,ValueError) as e:
-                print(f"Error:{e},skipping...")
-                continue
-
-            location_obj = Location(obj, appointments, date_obj) #pass to Location model
-            locations.append(location_obj)
+            location_obj = self.make_loc_instance(obj,dict)
+            if location_obj:
+                locations.append(location_obj)
 
         return locations
 
+    def get_dict(self,loc_obj,time_dict):
+        """
+
+        :param loc_obj:
+        :param time_dict:
+        :return:
+        """
+        try:
+            loc_id = loc_obj["LocAppointments"][0]["LocationId"]
+            return time_dict.get(loc_id)
+        except KeyError:
+            print("Invalid Location Data.")
+            return None
+
+    def make_loc_instance(self, loc_obj, time_obj ):
+        return Location.create_location(loc_obj, time_obj)
+
 class Filter:
-    def __init__(self,days):
+    def __init__(self,days, retriever = None):
         """
         Takes the locations from LocationRetriever object and filters it in filter() based on the day range given, returning a new list of location objects which next appointments date match day range given from the current date sorted from most recent to least recent.
         :param days:
             Integer representing the range of days from now in which you wish to find an available appointment.
         """
         self.days = days
-        self.retriever = LocationRetriever()
-        self.retriever.fetch_locations()
+        self.retriever = retriever or LocationRetriever()
+        if not self.retriever.locations:
+            self.retriever.fetch_locations()
 
     def filter(self):
         """
