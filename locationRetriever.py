@@ -29,7 +29,7 @@ class LocationRetriever:
 
     def get_tags(self,url: str):
         """
-        Creates the soup from the appointmentWizard website using requests library and filter all the script tags in the document.
+        Creates the soup from the appointmentWizard website using requests library and filters all the script tags in the document.
         :return:
             bs4 resultSet with all script tags found
         """
@@ -65,11 +65,11 @@ class LocationRetriever:
 
     def find_time(self, script_tags: ResultSet):
         """
-                Iterates through the result set from getTags and uses regular expressions on the iterables in order to extract the timeData variable value (if existent).
-                :return:
-                    IF FOUND: variable value as string
-                    IF NOT FOUND: None
-                """
+        Iterates through the result set from getTags and uses regular expressions on the iterables in order to extract the timeData variable value (if existent).
+        :return:
+            IF FOUND: variable value as string
+            IF NOT FOUND: None
+        """
         if script_tags == []:
             return None
         time_pattern = r'var timeData = (\[.*?\])'
@@ -102,7 +102,7 @@ class LocationRetriever:
 
     def get_locations(self,location_json: dict,time_dict: dict):
         """
-        filters those locations which have available appointments and pass them to Location model. Also extract the number of available appointments and parse the next appointment date (string) to a datetime object
+        takes both dicts containing location info as parameter and map the ones with available appointments into location objects
         :return:
             list of Location objects with available appointments
         """
@@ -126,10 +126,13 @@ class LocationRetriever:
 
     def get_dict(self,loc_obj,time_dict):
         """
-
+        Search for the loc_obj's id inside of time_dict
         :param loc_obj:
+            dict iterable from the list of locations (locationData)
         :param time_dict:
+            hashed dict with location id as keys
         :return:
+            corresponding value from the iterable's key in time_dict
         """
         try:
             loc_id = loc_obj["LocAppointments"][0]["LocationId"]
