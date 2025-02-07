@@ -51,7 +51,6 @@ class LocationRetriever:
         """
         if script_tags == []:
             return None
-
          # Regular expressions to extract locationData
         location_pattern = r'var locationData\s*=\s*(\[\{.*?\}\]);'
         for script_tag in script_tags:
