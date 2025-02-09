@@ -2,6 +2,8 @@
 ![Build Status](https://github.com/ArthurCRodrigues/MVC-Appointment-Finder/actions/workflows/tests.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+![Coverage](https://coveralls.io/repos/github/ArthurCRodrigues/MVC-Appointment-Finder/badge.svg?branch=main)
+
 
 ### This application helps you find an available appointment in New Jersey Motor Vehicle Commission (NJ-MVC) appointment wizard.
 This is a python-based CLI application that continuously monitors and notifies users of available appointments within a specified date range.The project uses web scraping to retrieve real-time appointment data from a government website and filters the results based on user-defined parameters
