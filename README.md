@@ -64,7 +64,8 @@ This will check for appointments within the next 5 days and notify you every 20 
 - `requirements.txt`: List of project dependencies
 
 ## License
-This project is licensed under the MIT License. See `LICENSE` for more details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
 
 ## Contact
 Developed by Arthur(https://github.com/ArthurCRodrigues). Feel free to reach out for collaboration or questions.
