@@ -92,6 +92,8 @@ class LocationRetriever:
             time_json = json.loads(timeData)
             time_dict = {}
             for obj in time_json:
+                if not obj.get("LocationId"):
+                    return None,None
                 time_dict[obj["LocationId"]] = obj  # Fills a new dictionary with the location id as a key for that dict (linear access)
             # Basically hashed the dict
             return location_json,time_dict
@@ -160,6 +162,8 @@ class Filter:
         Filters self.retriever.locations appending those which appointments lie inside the day range to a new array. Returns the array sorted based on date.
         :return:
         """
+        if not self.retriever.locations:
+            return []
         filtered_dates = []
         current_date = datetime.now()
         range_date = current_date + timedelta(days=self.days)
