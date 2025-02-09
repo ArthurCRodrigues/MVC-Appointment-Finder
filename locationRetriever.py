@@ -180,11 +180,4 @@ class Filter:
         return sorted(locations, key=lambda loc: loc.next_appointment_date)
 
 
-if __name__ == "__main__":
-    retriever = LocationRetriever()
-    with open("usableScripts.txt","w") as f:
-        script_tags = retriever.get_tags('https://telegov.njportal.com/njmvc/AppointmentWizard/12')
-        location_str = retriever.find_location(script_tags)
-        time_str = retriever.find_time(script_tags)
-        f.write(location_str + "\n")
-        f.write(time_str + "\n")
+
