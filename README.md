@@ -1,4 +1,8 @@
-# MVC-Apointment-Finder
+# MVC-Appointment-Finder
+![Build Status](https://github.com/ArthurCRodrigues/MVC-Appointment-Finder/actions/workflows/tests.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+
 ### This application helps you find an available appointment in New Jersey Motor Vehicle Commission (NJ-MVC) appointment wizard.
 This is a python-based CLI application that continuously monitors and notifies users of available appointments within a specified date range.The project uses web scraping to retrieve real-time appointment data from a government website and filters the results based on user-defined parameters
 ## Table of Contents
@@ -7,7 +11,7 @@ This is a python-based CLI application that continuously monitors and notifies u
 - [Installation](#installation)
 - [Usage](#usage)
 - [Project Structure](#project-structure)
-- [Future Improvements](#future-improvements)
+- [Testing](#testing)
 - [License](#license)
 
 ## Features 
@@ -62,6 +66,15 @@ This will check for appointments within the next 5 days and notify you every 20 
 - `locationRetriever.py`: Contains the `LocationRetriever` class for scraping and parsing data and `Filter` class for filtering the available locations found in the previous class based on specified day range
 - `searcher.py`: Implements the continuous search logic and sends desktop notifications
 - `requirements.txt`: List of project dependencies
+
+## Testing
+This project includes unit tests for key components to ensure reliability and correct functionality.
+
+### Running Tests
+To run the tests, execute the following command:
+```bash
+python -m unittest discover tests
+```
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

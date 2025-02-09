@@ -18,7 +18,7 @@ def continuous_search(days, check_interval=10):
             available_locations = filter_instance.filter()
 
             if available_locations:
-                print("\n Appointments found! ")
+                print("\nAppointments found!\n")
                 for location in available_locations:
                     print(location)
                     # Send a desktop notification for each location found
